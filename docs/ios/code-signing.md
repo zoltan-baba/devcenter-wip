@@ -1,50 +1,55 @@
-There are many ways you can manage the Code Signing of iOS projects.
-In short, all you need for signing an iOS app is:
+## iOS Code Signing
+
+The code signing of iOS and Mac projects requires:
 
 * `.p12` Certificate / Identity file(s)
 * __Provisioning Profile__ file(s) matching your project (team ID, bundle ID, ...)
-* And a script, tool or step which installs these files in the build environment.
-  __If you want to store your code signing files on [bitrise.io](https://www.bitrise.io),
-  please make sure that you have the `Certificate and profile installer` step in your
-  app's workflow!__
+* a script, tool or step which installs these files in the build environment.
 
+You can store your code signing files and create a signed .ipa file for your iOS, Mac or Xamarin project on [bitrise.io](https://www.bitrise.io). You can manually upload all the required files (Provisoning Profiles and .p12 certificate files) or you can use automatic provisioning to automatically generate and manage Provisioning Profiles from a connected Apple Developer account. We'll show how to use both options!
 
-## Use bitrise.io and our tools to manage your code signing files
+1. [Collect the required files with codesigndoc](#collect-the-required-files-with-codesigndoc).
 
-If you use [bitrise.io](https://www.bitrise.io) to store your code signing files,
-creating a signed iOS `.ipa` (iOS app file) is as simple as:
+1. Upload and manage your files with either [manual provisioning](#iOS-manual-provisioning) or [automatic provisioning](#iOS-auto-provisioning).
 
-1. [Collect the required files with codesigndoc](#collect-the-required-files-with-codesigndoc)
-1. Make sure the `Certificate and profile installer` step is in your Workflow (that's
-   our step which can download & install the code signing files from [bitrise.io](https://www.bitrise.io))
-1. Use the `Xcode Archive` or `Xamarin Archive` steps to create a signed `.ipa`
-    * Xcode projects: [Configure `Xcode Archive` to create the signed `.ipa`](#configure-xcode-archive-to-create-the-signed-ipa)
-    * Xamarin projects: [Configure `Xamarin Archive` to create the signed `.ipa`](#configure-xamarin-archive-to-create-the-signed-ipa)
+1. Use the `Xcode Archive & Export for iOS`, the `Xcode Archive for Mac`, or the `Xamarin Archive` step to create a signed `.ipa`:
+
+    * Xcode projects: [Configure the appropriate `Xcode Archive` step to create the signed `.ipa`](#configure-the-appropriate-xcode-archive-step-to-create-the-signed-ipa)
+    * Xamarin projects: [Configure `Xamarin Archive` to create the signed `.ipa`](#configure-the-xamarin-archive-step-to-create-the-signed-ipa)
 
 
 ### Collect the required files with codesigndoc
 
-The easiest way to collect these files is to use our open source [codesigndoc](https://github.com/bitrise-tools/codesigndoc)
-tool. This tool runs a clean Archive _on your Mac_, and analyzes the Xcode log output
-to see which code signing files Xcode used during the Archive.
+The open source [codesigndoc](https://github.com/bitrise-tools/codesigndoc)
+tool runs a clean Xcode/Xamarin Studio Archive _on your Mac_, and analyzes the generated archive file. It collects the code signing settings that Xcode or Xamarin Studio used during the archive process, and prints the list of the required code signing files. You can also search for and export these files using `codesigndoc`.
 
-You can run `codesigndoc` with the [one liner you can find in its Readme](https://github.com/bitrise-tools/codesigndoc#one-liner).
+1. Open the `Terminal`.
 
-!!! note "Separate one-liners for Xcode and Xamarin projects"
-    There are two one-liners, one for __Xcode__ projects, and one for __Xamarin__ (iOS) projects.
-    Make sure you use the right one!
+2. Enter the appropriate one-liner command, depending on your project type.
+  * For an __Xcode__ project:
 
-!!! note "Troubleshooting: Ensure the state of the code"
+    `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xcode.sh)"
+`
+  * For a __Xamarin__ project:
+
+    `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xamarin.sh)"`
+
+1. Open your `Finder.app` and drag-and-drop your project's `.xcodeproj` or `.xcworkspace` file into the command line in your `Terminal`.
+
+You can also install and run `codesigndoc` manually - for more information, check out the [tool's Readme](https://github.com/bitrise-tools/codesigndoc)!
+
+!!! note "Troubleshooting: Ensure the correct state of the code"
     You get the most accurate result if you run `codesigndoc` on the same state of your
     repository/code which is available after a clean `git clone`, as that will
-    be the state of the code after the build server checks out the code (e.g.
+    be the state of the code after the build server checks it out (for example,
     you might have files on your Mac which are in `.gitignore`, so it exists
-    on your Mac but not in the repository / after a `git clone` on a new Mac).
+    on your Mac but not in the repository or after a `git clone` on a new Mac).
 
-    So, for the best result, you should __do a clean `git clone` of the
-    repository__ (into a new directory) on your Mac, and then
-    run `codesigndoc` in this directory (not in the directory where
-    you usually work on the project).
+    So, for the best results, we recommend you to:
+    1. __Do a clean `git clone` of the repository__ (into a new directory) on your Mac.
+
+    2. Run `codesigndoc` in this directory (not in the directory
+       where you usually work on the project).
 
 !!! note "Troubleshooting: make sure you can export an IPA from Xcode.app"
     It's also advised to do a full Archive + Export (until you get a signed `.ipa`)
@@ -53,44 +58,109 @@ You can run `codesigndoc` with the [one liner you can find in its Readme](https:
     during the IPA export. If you run `codesigndoc` after you exported an `.ipa`
     from Xcode, `codesigndoc` will able to collect all the files.
 
+### iOS manual provisioning
+
 Once you have the `.p12` and Provisioning Profiles collected by `codesigndoc`,
-upload these files to your app on [bitrise.io](https://www.bitrise.io).
+upload the files to your app on [bitrise.io](https://www.bitrise.io).
 
-__Code signing files can be uploaded to [bitrise.io](https://www.bitrise.io) in the app's Workflow Editor__,
-under the `Code signing & Files` section of the editor.
+1. Open your app on your `Dashboard`.
 
-There's only one more thing you have to do: if you want to store your code signing files on [bitrise.io](https://www.bitrise.io),
-__please make sure that you have the `Certificate and profile installer` step in your app's workflow!__
-That's the step which downloads and installs the Certificate (.p12) file(s) and
-the Provisioning Profile file(s) from [bitrise.io](https://www.bitrise.io).
+2. Select the `Workflow Editor` tab.
+
+3. Select the `Code Signing` tab.
+
+4. Add the Provisioning Profile files and the .p12 files in the `Add Provisioning Profile(s)` and the `Add the private key (.p12) for signing` fields, respectively.
+
+5. Make sure you have the `Certificate and profile installer` step in your app's Workflow. You can check it on the `Workflow` tab of the `Workflow Editor`.
+
 
 !!! note "Troubleshooting: missing Distribution signing files"
-    If `codesigndoc` would not pick up one or more distribution .p12 / Provisioning Profile,
+    If `codesigndoc` does not pick up one or more distribution .p12 files and/or Provisioning Profile(s),
     you can export those manually (.p12 from `Keychain Access` app, Provisioning Profiles from
     [Apple Developer Portal](https://developer.apple.com/)), just like you would when you
     transfer these files between Macs.
 
-    But, __even if `codesigndoc` would not find
+    But __even if `codesigndoc` does not find
     all the files, you should upload all the files collected by `codesigndoc`!__
     The base files collected by `codesigndoc` are essential for your project's
-    code signing, without those it's not possible to create a signed IPA
+    code signing: without those it's not possible to create a signed IPA
     for the project!
 
-### Configure Xcode Archive to create the signed IPA
+
+### iOS auto provisioning for Xcode projects
+
+You can use iOS automatic provisioning to automatically generate the required Provisioning Profiles for your project.
+
+Once you have the `.p12` and Provisioning Profiles collected by `codesigndoc`,
+upload the .p12 files to your app on [bitrise.io](https://www.bitrise.io) and use the `iOS Auto Provisioning` step to manage Provisioning Profiles. `iOS Auto Provision` will generate the desired profiles and `Xcode Archive & Export for iOS` will search for these Provisioning Profiles. The iOS Auto Provision step will include the uploaded certificates in the managed profiles: the best option is to upload one Development and the Distribution Codesign Identity from the team you want to use to manage your profiles.
+
+Before setting up automatic provisioning in your workflow, make sure that:
+
+* you have at least __Admin__ role in the developer portal team.
+* your Apple Developer account is connected to bitrise.io.
+* Apple Developer Portal integration to your Bitrise project is enabled.
+
+!!! note "Xcode Automatically manage signing option"
+    The `iOS Auto Provisioning` step can automatically manage profiles even if the iOS project uses Xcode's
+    _Automatically manage signing_ option, introduced in Xcode 8. The step can detect if the provided iOS
+    project uses _Automatically manage signing_ option or not. If the project uses the new signing option
+    the step makes sure that the test devices registered on Bitrise are also registered on the Developer
+    Portal. Then it will download the Xcode managed profiles which are needed to sign your project and
+    will install them together with the provided certificates.
+
+1. Open your app on your `Dashboard`.
+
+2. Select the `Workflow Editor` tab.
+
+3. Select the `Code Signing` tab.
+
+4. Add the .p12 files in the `Add the private key (.p12) for signing` field.
+
+5. Make sure you have the `iOS Auto Provisioning` step in your app's Workflow. You can check it on the `Workflow` tab of the `Workflow Editor`.
+
+6. Fill the required inputs of the step.
+  * `The Developer Portal team id` - find this on the [Membership Details page of your Apple Developer Portal account](https://developer.apple.com/account/#/membership)
+  * `Distribution type` - make sure its value matches the value of the `Select method for export` input in the `Xcode Archive & Export for iOS step`.
+  * `Scheme` - you can restrict which targets to process.
+
+6. Make sure that you do __NOT__ have the `Certificate and profile installer` step in your Workflow. If you have both `iOS Auto Provisioning` and `Certificate and profile installer` steps in your Workflow, your build will fail.
+
+
+!!! note "Troubleshooting: missing Distribution signing files"
+    If `codesigndoc` does not pick up one or more distribution .p12 files,
+    you can export those manually from the `Keychain Access` app, just like you would when you
+    transfer these files between Macs.
+
+    But __even if `codesigndoc` does not find
+    all the files, you should upload all the files collected by `codesigndoc` - except the Provisioning Profile files!__
+    The base files collected by `codesigndoc` are essential for your project's
+    code signing: without those it's not possible to create a signed IPA
+    for the project!
+
+### Configure the appropriate Xcode Archive step to create the signed IPA
 
 Once you have all your code signing files [collected](#collect-the-required-files-with-codesigndoc),
-and you have the `Certificate and profile installer` and the `Xcode Archive` steps in the workflow,
+and you have the `Certificate and profile installer` and the `Xcode Archive & Export for iOS` or the `Xcode Archive for Mac` steps in the workflow,
 you can start a build and get a signed IPA.
 
-If you use Xcode 8 automatic code signing, the generated IPA by default will be a development signed IPA.
+If you use Xcode 8/9 automatic code signing, the generated IPA by default will be a development signed IPA.
 If you use Manual code signing, the default code signing type will be what you set in your
 Xcode project for the Scheme/Configuration.
 
-To specify a distribution code signing type, all you have to do is:
+You can specify a distribution code signing type for either iOS or Mac apps.
 
-1. select the `Xcode Archive for iOS` (or in case of a Mac app, the `Xcode Archive for Mac`) step in the app's Workflow Editor
-1. set the `Select method for export` input of the step to the type of code signing you want to use (`app-store`, `ad-hoc`, `enterprise`, ...)
-1. save the Workflow, and start a new build
+1. Make sure you have either the `Xcode Archive for iOS` or the `Xcode Archive for Mac` step in the app's Workflow Editor, depending on your project type. Select your step.
+
+1. Set the `Select method for export` input of the step to the type of code signing you want to use.
+
+  If you use automatic provisioning, make sure it matches the value of the `Distribution type` input of the `iOS Auto Provisioning` step. The options are:  
+  * `auto-detect` - please note that this option is deprecated and will be removed. We do not recommend using it. It selects the export method based on the Provisioning Profile embedded into the generated Xcode archive, and __NOT__ based on the uploaded codesigning files.
+  * `app-store`
+  * `ad-hoc`
+  * `enterprise`
+  * `development`.
+
+1. Save the Workflow, and start a new build.
 
 That's all. Xcode will auto select the right signing files based on your project's Bundle ID and
 Team ID settings, and the Export Method you set.
@@ -102,22 +172,22 @@ the `The Developer Portal team to use for this export` option as well (in additi
 to the `Select method for export`).
 
 
-### Configure Xamarin Archive to create the signed IPA
+### Configure the Xamarin Archive step to create the signed IPA
 
-Once you have all your code signing files [collected](#collect-the-required-files-with-codesigndoc),
-and you have the `Certificate and profile installer` and the `Xamarin Archive` steps in the workflow,
-you can start a build and get a signed IPA.
+Once you have all your code signing files [collected](#collect-the-required-files-with-codesigndoc), and you have the `Certificate and profile installer`, you can start a build and get a signed IPA.
 
 To control what kind of code signing the IPA should be signed with, all you have to do is:
 
-1. select the `Xamarin Archive` step in the app's Workflow Editor
-1. set the `Xamarin solution configuration` input to the Xamarin project Configuration you want to use (e.g. `Release`)
-1. set the `Xamarin solution platform` input to `iPhone`
+1. Make sure that you have the `Xamarin Archive` step in the app's Workflow Editor and select it.
 
-You can control the code signing type in your Xamarin project, by settings the
-code signing configurations for the Configuration in Xamarin Studio.
+1. Set the `Xamarin solution configuration` input of the step to the Xamarin project Configuration you want to use (e.g. `Release`).
 
-_If you want to use more than one code signing type (e.g. to create both Ad Hoc and App Store
+1. Set the `Xamarin solution platform` input to `iPhone`.
+
+You can control the code signing type in your Xamarin project by setting the
+code signing configurations in Xamarin Studio.
+
+_If you want to use more than one code signing type (for example, to create both Ad Hoc and App Store
 signed apps), you should create more than one Release configuration in Xamarin Studio,
 and set the separate configurations to the types you want to use (e.g. one to Ad Hoc,
 and the second one to App Store)._
@@ -135,27 +205,3 @@ and the second one to App Store)._
     configurations in your Xamarin project, or to manually collect
     and upload the signing files required for the configurations
     you want to use!_
-
-
-## Use a third party tool to manage your code signing files
-
-There are third party tools which can be used for managing your code signing files,
-like [fastlane match](https://github.com/fastlane/fastlane/tree/master/match) -
-related bitrise.io setup guide: [How to configure fastlane match for Bitrise](/fastlane/how-to-configure-fastlane-match-for-bitrise/) -
-or [fastlane sigh](https://github.com/fastlane/fastlane/tree/master/sigh).
-
-!!! warning
-    If you decide to use a third party tool for code signing management,
-    please consult the tool's documentation and issue tracker,
-    we only provide customer support for our own Step (`Certificate and profile installer`)
-    and tools (`codesigndoc`)!
-
-!!! note "`Certificate and profile installer` step"
-    Even if you use a third party tool to manage your code signing files,
-    and you don't plan to upload any code signing file to bitrise.io,
-    you should keep the `Certificate and profile installer` step in your
-    Workflow. This is because certain tools were not designed to work
-    in an ephemeral environment, or in a full clean macOS install,
-    and the `Certificate and profile installer` includes common
-    workarounds for this situation. It's not guaranteed that it will help with
-    the tool of your choice, but it won't cause any issue either.

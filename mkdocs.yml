@@ -21,6 +21,7 @@ pages:
   - Signing up with Bitbucket: signing-up/signing-up-with-bitbucket.md
   - Signing up with email: signing-up/signing-up-with-email.md
   - Trial after signing up: signing-up/trial-after-signing-up.md
+  - Connecting your Apple Developer Account to Bitrise: signing-up/connecting-apple-dev-account.md
 - Adding a new app:
   - Adding a new app: adding-a-new-app/index.md
   - Connecting a repository: adding-a-new-app/connecting-a-repository.md
@@ -54,9 +55,9 @@ pages:
 - iOS:
   - iOS Code Signing: ios/code-signing.md
   - iOS Code Signing - Technical details: ios/code-signing-technical-details.md
-  - Uploading certificates: ios/uploading-certificates.md
-  - How to export Certificates and Provisioning Profiles: ios/export-certificate-and-provisioning-profile.md
+  - Export and upload Certificates and Provisioning Profiles: ios/export-certificate-and-provisioning-profile.md
   - Resigning an IPA: ios/resigning-an-ipa.md
+  - Protecting your code signing files: ios/protecting-your-code-signing-files.md
   - Frequent iOS issues: ios/frequent-ios-issues.md
   - List of known Xcode issues: ios/known-xcode-issues.md
 - Android:
