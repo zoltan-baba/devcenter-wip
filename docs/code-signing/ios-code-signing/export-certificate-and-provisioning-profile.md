@@ -11,19 +11,21 @@ test them on devices or upload them to the AppStore.
 
 You can easily locate the needed certificates and provisioning profiles for your iOS project with our `codesigndoc` tool.
 
-### Export code signing files using the codesigndoc tool
+### Exporting code signing files using the codesigndoc tool
 
 1. Open your `Terminal.app` on your Mac.
 [run the one liner "install" command](https://github.com/bitrise-tools/codesigndoc#one-liner).
 
 1. Enter the appropriate one-liner command, depending on your project type.
-  * For an __Xcode__ project:
 
-    `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xcode.sh)"
+    * For an __Xcode__ project:
+
+      `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xcode.sh)"
 `
-  * For a __Xamarin__ project:
 
-    `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xamarin.sh)"`
+    * For a __Xamarin__ project:
+
+      `bash -l -c "$(curl -sfL https://raw.githubusercontent.com/bitrise-tools/codesigndoc/master/_scripts/install_wrap-xamarin.sh)"`
 
 1. Open your `Finder.app` and drag-and-drop your project's `.xcodeproj` or `.xcworkspace` file into the command line in your `Terminal`.
 
